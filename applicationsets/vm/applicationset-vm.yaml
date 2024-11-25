@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: vms
+spec:
+  generators:
+  - clusters: {}
+  - list:
+      elements:
+      - appName: dev-vm
+        gitPath: dev
+        namespace: dev-vm
+      - appName: prod-vm
+        gitPath: prod
+        namespace: prod-vm
+  template:
+    metadata:
+      name: "{{appName}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/rh-mobb/rosa-virt-gitops.git
+        targetRevision: HEAD
+        path: "applicationsets/vm/kustomize/{{gitPath}}"
+      destination:
+        name: in-cluster
+        namespace: "{{namespace}}"
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true
+        automated:
+          selfHeal: true
+          prune: true
